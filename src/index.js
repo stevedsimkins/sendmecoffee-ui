@@ -2,10 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { UseWalletProvider } from "use-wallet"
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <UseWalletProvider chainId={1}>
+      <App />
+    </UseWalletProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );
