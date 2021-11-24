@@ -3,11 +3,14 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { UseWalletProvider } from "use-wallet"
+import { ChakraProvider } from "@chakra-ui/react";
 
 ReactDOM.render(
   <React.StrictMode>
     <UseWalletProvider chainId={1}>
-      <App />
+      <ChakraProvider>
+        <App />
+      </ChakraProvider>
     </UseWalletProvider>
   </React.StrictMode>,
   document.getElementById('root')
