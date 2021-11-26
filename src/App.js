@@ -85,7 +85,8 @@ function App() {
     setIsLoading(false);
     setDonationValue(null);
     toastPopUp();
-  }
+  };
+
 
   const connectWalletAction = async () => {
     try {
