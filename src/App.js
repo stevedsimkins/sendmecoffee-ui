@@ -1,4 +1,6 @@
+import React, { useState, useEffect } from "react"
 import { useWallet } from "use-wallet";
+import { ethers } from "ethers";
 import {
   useColorMode,
   IconButton,
@@ -26,9 +28,92 @@ const TWITTER_LINK = `https://twitter.com/${USER_NAME}`;
 
 function App() {
 
+  //State
+  const [currentAccount, setCurrentAccount] = useState(null);
+
+  //use-wallet hook
   const wallet = useWallet();
 
+  // Hook for changing from light mode to dark mode
   const { colorMode, toggleColorMode } = useColorMode();
+
+  //Ethereum Functions 
+  const checkIfWalletIsConnected = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (!ethereum) {
+        console.log("Make sure you have MetaMask!");
+        return;
+      } else {
+        console.log("We have the ethereum object", ethereum);
+
+        const accounts = await ethereum.request({ method: 'eth_accounts' });
+
+        if (accounts.length !== 0) {
+          const account = accounts[0];
+          console.log('Found an authorized account:', account);
+          setCurrentAccount(account);
+        } else {
+          console.log('No authorized account found');
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const connectWalletAction = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (!ethereum) {
+        alert("Get Metamask!")
+        return;
+      }
+
+      wallet.connect();
+      setCurrentAccount(wallet.account)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  //Use Effect 
+  useEffect(() => {
+    checkIfWalletIsConnected();
+  }, []);
+
+
+  //Conditional Rendering
+  const renderContent = () => {
+    const { ethereum } = window;
+    if (!ethereum) {
+      return (
+        <Box display="flex" justifyContent="center" alignItems="center" width="full">
+          <a href="https://metamask.io/" target="_blank"><Button width="full">Download Metamask</Button></a>
+        </Box>
+      )
+    }
+
+    if (wallet.status === 'connected') {
+      return (
+        <VStack spacing={6} py={5}>
+          <NumberInput width="100%">
+            <NumberInputField placeholder="Ξ" />
+          </NumberInput>
+          <Input placeholder="Write a message!" />
+          <Button w="100%" colorScheme="blue" >Submit</Button>
+        </VStack>
+
+      )
+    } else {
+      return (
+        <Box display="flex" justifyContent="center" alignItems="center" width="full">
+          <Button onClick={() => connectWalletAction()}>Connect Wallet</Button>
+        </Box>
+      )
+    }
+  }
 
   return (
     <Container maxW="container.lg" >
@@ -46,13 +131,7 @@ function App() {
               to buy him a coffee with cryto! <br />
             </Text>
           </Box>
-          <VStack spacing={6} py={5}>
-            <NumberInput width="100%">
-              <NumberInputField placeholder="Ξ" />
-            </NumberInput>
-            <Input placeholder="Write a message!" />
-            <Button w="100%" colorScheme="blue" >Submit</Button>
-          </VStack>
+          {renderContent()}
         </Box>
         <Box pos="absolute" bottom="5%">
           <Text fontSize="sm" py={2}>Created by Steve Simkins</Text>
