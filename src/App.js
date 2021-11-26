@@ -3,6 +3,7 @@ import { useWallet } from "use-wallet";
 import { ethers } from "ethers";
 import {
   useColorMode,
+  useToast,
   IconButton,
   Text,
   Flex,
@@ -15,21 +16,31 @@ import {
   NumberInput,
   NumberInputField,
   Button,
-  ButtonGroup
+  ButtonGroup,
+  Spinner,
 } from "@chakra-ui/react";
 import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 import { FaGithub, FaTwitter, } from "react-icons/fa";
 import avatar from "./assets/avatar.jpg";
 
+import abi from "./BuyMeCoffee.json";
+
+const contractAddress = "0xcaDd7Da385eB287fBf433C47767b6C5eBc75DAB7";
+const contractABI = abi.abi;
+
+const YOUR_NAME = "Steve Simkins";
 const USER_NAME = "stevedsimkins";
 
 const GITHUB_LINK = `https://github.com/${USER_NAME}`;
 const TWITTER_LINK = `https://twitter.com/${USER_NAME}`;
 
 function App() {
+  const toast = useToast();
 
   //State
   const [currentAccount, setCurrentAccount] = useState(null);
+  const [donationValue, setDonationValue] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   //use-wallet hook
   const wallet = useWallet();
@@ -63,6 +74,19 @@ function App() {
     }
   };
 
+  const sendDonation = async () => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const buyMeCoffeeContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+    let depositTxn = await buyMeCoffeeContract.deposit("hello", { value: ethers.utils.parseEther(donationValue) });
+    setIsLoading(true);
+    await depositTxn.wait();
+    setIsLoading(false);
+    setDonationValue(null);
+    toastPopUp();
+  }
+
   const connectWalletAction = async () => {
     try {
       const { ethereum } = window;
@@ -83,6 +107,20 @@ function App() {
     checkIfWalletIsConnected();
   }, []);
 
+  //utils 
+  const numberInputHandler = (e) => {
+    setDonationValue(e.target.value);
+  }
+
+  const toastPopUp = () =>
+    toast({
+      title: "Donation Sent!",
+      description: `Thank you for supporting ${YOUR_NAME}!`,
+      status: "success",
+      duration: 9000,
+      isClosable: true,
+    })
+
 
   //Conditional Rendering
   const renderContent = () => {
@@ -99,10 +137,12 @@ function App() {
       return (
         <VStack spacing={6} py={5}>
           <NumberInput width="100%">
-            <NumberInputField placeholder="Ξ" />
+            <NumberInputField onChange={numberInputHandler} placeholder="Ξ" />
           </NumberInput>
           <Input placeholder="Write a message!" />
-          <Button w="100%" colorScheme="blue" >Submit</Button>
+          {isLoading ? <Spinner /> :
+            <Button w="100%" colorScheme="blue" onClick={() => sendDonation()} >Submit</Button>
+          }
         </VStack>
 
       )
@@ -126,7 +166,7 @@ function App() {
           <Box py={3}>
             <Heading py={2}>Support with Crypto!</Heading>
             <Text fontSize="md">
-              If you would like to support Steve in his <br />
+              If you would like to support {YOUR_NAME} in his <br />
               creative endeavors feel free to use this dApp <br />
               to buy him a coffee with cryto! <br />
             </Text>
