@@ -23,7 +23,7 @@ import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 import { FaGithub, FaTwitter, } from "react-icons/fa";
 import avatar from "./assets/avatar.jpg";
 
-import abi from "../utils/BuyMeCoffee.json";
+import abi from "./utils/BuyMeCoffee.json";
 import CONTRACT_ADDRESS from "./constants";
 
 const contractABI = abi.abi;
@@ -33,6 +33,7 @@ const USER_NAME = "stevedsimkins";
 
 const GITHUB_LINK = `https://github.com/${USER_NAME}`;
 const TWITTER_LINK = `https://twitter.com/${USER_NAME}`;
+const owner = "0x51E4507209F61a7e2eb37445b1f6f73985d9E621";
 
 function App() {
   const toast = useToast();
@@ -75,16 +76,22 @@ function App() {
   };
 
   const sendDonation = async () => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-    const buyMeCoffeeContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const buyMeCoffeeContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
+      let tx = await signer.sendTransaction({ to: owner, value: ethers.utils.parseEther(`${donationValue}`) });
+      await tx.wait();
 
-    let depositTxn = await buyMeCoffeeContract.deposit("hello", { value: ethers.utils.parseEther(donationValue) });
-    setIsLoading(true);
-    await depositTxn.wait();
-    setIsLoading(false);
-    setDonationValue(null);
-    toastPopUp();
+      let depositTxn = await buyMeCoffeeContract.transfer(`${currentAccount}`, donationValue, "Hello!");
+      setIsLoading(true);
+      await depositTxn.wait();
+      setIsLoading(false);
+      setDonationValue(null);
+      toastPopUp();
+    } catch (error) {
+      console.log(error)
+    }
   };
 
 
