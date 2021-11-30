@@ -23,9 +23,9 @@ import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 import { FaGithub, FaTwitter, } from "react-icons/fa";
 import avatar from "./assets/avatar.jpg";
 
-import abi from "./BuyMeCoffee.json";
+import abi from "../utils/BuyMeCoffee.json";
+import CONTRACT_ADDRESS from "./constants";
 
-const contractAddress = "0xcaDd7Da385eB287fBf433C47767b6C5eBc75DAB7";
 const contractABI = abi.abi;
 
 const YOUR_NAME = "Steve Simkins";
@@ -77,7 +77,7 @@ function App() {
   const sendDonation = async () => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
-    const buyMeCoffeeContract = new ethers.Contract(contractAddress, contractABI, signer);
+    const buyMeCoffeeContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
 
     let depositTxn = await buyMeCoffeeContract.deposit("hello", { value: ethers.utils.parseEther(donationValue) });
     setIsLoading(true);
