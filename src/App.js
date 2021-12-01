@@ -23,8 +23,8 @@ import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 import { FaGithub, FaTwitter, } from "react-icons/fa";
 import avatar from "./assets/avatar.jpg";
 
-import abi from "../utils/BuyMeCoffee.json";
-import CONTRACT_ADDRESS from "./constants";
+import abi from "./BuyMeCoffee.json";
+import { OWNER_ADDRESS, CONTRACT_ADDRESS } from "./constants";
 
 const contractABI = abi.abi;
 
@@ -87,6 +87,18 @@ function App() {
     toastPopUp();
   };
 
+  const withdraw = async () => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const buyMeCoffeeContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
+
+    let withdrawTxn = await buyMeCoffeeContract.withdraw();
+    setIsLoading(true);
+    await withdrawTxn.wait();
+    setIsLoading(false);
+    toastPopUp();
+  }
+
 
   const connectWalletAction = async () => {
     try {
@@ -137,12 +149,18 @@ function App() {
     if (wallet.status === 'connected') {
       return (
         <VStack spacing={6} py={5}>
-          <NumberInput width="100%">
-            <NumberInputField onChange={numberInputHandler} placeholder="Ξ" />
-          </NumberInput>
-          <Input placeholder="Write a message!" />
+          {wallet.account === OWNER_ADDRESS ? (
+            null
+          ) :
+            <>
+              <NumberInput width="100%">
+                <NumberInputField onChange={numberInputHandler} placeholder="Ξ" />
+              </NumberInput>
+              <Input placeholder="Write a message!" />
+            </>
+          }
           {isLoading ? <Spinner /> :
-            <Button w="100%" colorScheme="blue" onClick={() => sendDonation()} >Submit</Button>
+            <Button w="100%" colorScheme="blue" onClick={() => { wallet.account === OWNER_ADDRESS ? withdraw() : sendDonation() }} >{wallet.account === OWNER_ADDRESS ? `Withdraw` : `Submit`}</Button>
           }
         </VStack>
 
@@ -166,11 +184,17 @@ function App() {
           </Box>
           <Box py={3}>
             <Heading py={2}>Support with Crypto!</Heading>
-            <Text fontSize="md">
-              If you would like to support {YOUR_NAME} in his <br />
-              creative endeavors feel free to use this dApp <br />
-              to buy him a coffee with cryto! <br />
-            </Text>
+            {wallet.account === OWNER_ADDRESS ? (
+              <Text fontSize="md">
+                Withdraw your donations below!
+              </Text>
+            ) : (
+              <Text fontSize="md">
+                If you would like to support {YOUR_NAME} in his <br />
+                creative endeavors feel free to use this dApp <br />
+                to buy him a coffee with cryto! <br />
+              </Text>
+            )}
           </Box>
           {renderContent()}
         </Box>
