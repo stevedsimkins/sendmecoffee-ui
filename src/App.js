@@ -128,23 +128,29 @@ function App() {
   }
 
   const getAllDonations = async () => {
+    const { ethereum } = window;
+
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const buyMeCoffeeContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const buyMeCoffeeContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
 
-      let donations = await buyMeCoffeeContract.getAllCoffees();
+        let donations = await buyMeCoffeeContract.getAllCoffees();
 
-      let donationsCleaned = []
-      donations.forEach(donation => {
-        donationsCleaned.push({
-          sender: donation.sender,
-          amount: donation.amount,
-          message: donation.message,
-        })
-      });
-      donationsCleaned.reverse();
-      setAllDonations(donationsCleaned);
+        let donationsCleaned = []
+        donations.forEach(donation => {
+          donationsCleaned.push({
+            sender: donation.sender,
+            amount: donation.amount,
+            message: donation.message,
+          })
+        });
+        donationsCleaned.reverse();
+        setAllDonations(donationsCleaned);
+      } else {
+        console.log("ethereum object doesn't exist")
+      }
     } catch (error) {
       console.log(error)
     }
