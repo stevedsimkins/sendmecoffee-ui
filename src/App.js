@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import {
   useColorMode,
   useToast,
+  useColorModeValue,
   IconButton,
   Text,
   Flex,
@@ -28,7 +29,7 @@ import { OWNER_ADDRESS, CONTRACT_ADDRESS } from "./constants";
 
 const contractABI = abi.abi;
 
-const YOUR_NAME = "Steve Simkins";
+const YOUR_NAME = "Steve";
 const USER_NAME = "stevedsimkins";
 
 const GITHUB_LINK = `https://github.com/${USER_NAME}`;
@@ -41,13 +42,16 @@ function App() {
   const [currentAccount, setCurrentAccount] = useState(null);
   const [donationValue, setDonationValue] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [allDonations, setAllDonations] = useState([]);
+  const [message, setMessage] = useState("");
 
   //use-wallet hook
   const wallet = useWallet();
 
   // Hook for changing from light mode to dark mode
   const { colorMode, toggleColorMode } = useColorMode();
-
+  const bg = useColorModeValue("gray.200", "#2c313d");
+  const color = useColorModeValue("black", "white");
   //Ethereum Functions 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -65,6 +69,7 @@ function App() {
           const account = accounts[0];
           console.log('Found an authorized account:', account);
           setCurrentAccount(account);
+          getAllDonations();
         } else {
           console.log('No authorized account found');
         }
@@ -75,16 +80,21 @@ function App() {
   };
 
   const sendDonation = async () => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-    const buyMeCoffeeContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const buyMeCoffeeContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
 
-    let depositTxn = await buyMeCoffeeContract.deposit("hello", { value: ethers.utils.parseEther(donationValue) });
-    setIsLoading(true);
-    await depositTxn.wait();
-    setIsLoading(false);
-    setDonationValue(null);
-    toastPopUp();
+      let depositTxn = await buyMeCoffeeContract.deposit(`${donationValue}`, `${message}`, { value: ethers.utils.parseEther(donationValue) });
+      setIsLoading(true);
+      await depositTxn.wait();
+      setIsLoading(false);
+      setDonationValue(null);
+      toastPopUp();
+      getAllDonations();
+    } catch (error) {
+      console.log(error)
+    }
   };
 
   const withdraw = async () => {
@@ -96,7 +106,7 @@ function App() {
     setIsLoading(true);
     await withdrawTxn.wait();
     setIsLoading(false);
-    toastPopUp();
+    toastPopUpWithdraw();
   }
 
 
@@ -111,6 +121,30 @@ function App() {
 
       wallet.connect();
       setCurrentAccount(wallet.account)
+      getAllDonations();
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const getAllDonations = async () => {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const buyMeCoffeeContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
+
+      let donations = await buyMeCoffeeContract.getAllCoffees();
+
+      let donationsCleaned = []
+      donations.forEach(donation => {
+        donationsCleaned.push({
+          sender: donation.sender,
+          amount: donation.amount,
+          message: donation.message,
+        })
+      });
+      donationsCleaned.reverse();
+      setAllDonations(donationsCleaned);
     } catch (error) {
       console.log(error)
     }
@@ -125,10 +159,22 @@ function App() {
     setDonationValue(e.target.value);
   }
 
+  const messageInputHandler = (e) => {
+    setMessage(e.target.value);
+  }
+
   const toastPopUp = () =>
     toast({
       title: "Donation Sent!",
       description: `Thank you for supporting ${YOUR_NAME}!`,
+      status: "success",
+      duration: 9000,
+      isClosable: true,
+    })
+  const toastPopUpWithdraw = () =>
+    toast({
+      title: "Withdraw Successful!",
+      description: `Please check your wallet to confirm the funds sent to your account`,
       status: "success",
       duration: 9000,
       isClosable: true,
@@ -156,7 +202,7 @@ function App() {
               <NumberInput width="100%">
                 <NumberInputField onChange={numberInputHandler} placeholder="Ξ" />
               </NumberInput>
-              <Input placeholder="Write a message!" />
+              <Input placeholder="Write a message!" onChange={messageInputHandler} />
             </>
           }
           {isLoading ? <Spinner /> :
@@ -177,8 +223,8 @@ function App() {
   return (
     <Container maxW="container.lg" >
       <IconButton pos="absolute" top="5%" right="5%" aria-label="toggle color mode" icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />} onClick={toggleColorMode} />
-      <Flex justify="center" align="center" h="100vh" py={20} >
-        <Box>
+      <Flex justify="center" align="center" minH="100vh" flexWrap="wrap" py={20} >
+        <Box mx={10}>
           <Box display="flex" justifyContent="center" alignItems="center" w="full" py={3}>
             <Avatar size="xl" name="Steve" src={avatar} />
           </Box>
@@ -191,14 +237,23 @@ function App() {
             ) : (
               <Text fontSize="md">
                 If you would like to support {YOUR_NAME} in his <br />
-                creative endeavors feel free to use this dApp <br />
-                to buy him a coffee with cryto! <br />
-              </Text>
-            )}
-          </Box>
-          {renderContent()}
+                creative endeavors feel free to use this dApp <br /> to buy him a coffee with cryto! <br /> </Text>)} </Box> {renderContent()}
         </Box>
-        <Box pos="absolute" bottom="5%">
+        <Box display="flex" justifyContent="center" alignItems="center" flexDir="column">
+          <Heading> 🚀 {YOUR_NAME}'s Supporters</Heading>
+          <Box mx={10} my={3} overflowY="scroll" maxH="350">
+            {allDonations.map((donation, index) => {
+              return (
+                <Box maxW="420px" p={4} my={3} bg={bg} color={color} rounded="md">
+                  <Text isTruncated >From: {donation.sender}</Text>
+                  <Text>Donated: Ξ {donation.message}</Text>
+                  <Text>Message: {donation.amount}</Text>
+                </Box>
+              )
+            })}
+          </Box>
+        </Box>
+        <Box pos="absolute" bottom="2%">
           <Text fontSize="sm" py={2}>Created by Steve Simkins</Text>
           <ButtonGroup display="flex" justifyContent="center" alignItems="center" spacing="6">
             <a target="_blank" href={GITHUB_LINK}><IconButton aria-label="github social" icon={<FaGithub />} /></a>
