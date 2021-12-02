@@ -152,6 +152,7 @@ function App() {
   //Use Effect 
   useEffect(() => {
     checkIfWalletIsConnected();
+    getAllDonations();
   }, []);
 
   //utils 
