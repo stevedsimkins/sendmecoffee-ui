@@ -40,7 +40,7 @@ function App() {
 
   //State
   const [currentAccount, setCurrentAccount] = useState(null);
-  const [donationValue, setDonationValue] = useState(null);
+  const [donationValue, setDonationValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [allDonations, setAllDonations] = useState([]);
   const [message, setMessage] = useState("");
@@ -88,7 +88,8 @@ function App() {
       setIsLoading(true);
       await depositTxn.wait();
       setIsLoading(false);
-      setDonationValue(null);
+      setDonationValue("");
+      setMessage("");
       toastPopUp();
       getAllDonations();
     } catch (error) {
@@ -219,13 +220,13 @@ function App() {
           ) :
             <>
               <NumberInput width="100%">
-                <NumberInputField onChange={numberInputHandler} placeholder="Ξ" />
+                <NumberInputField onChange={numberInputHandler} value={donationValue} placeholder="Ξ" />
               </NumberInput>
-              <Input placeholder="Write a message!" onChange={messageInputHandler} />
+              <Input placeholder="Write a message!" onChange={messageInputHandler} value={message} />
             </>
           }
           {isLoading ? <Spinner /> :
-            <Button w="100%" colorScheme="blue" onClick={() => { wallet.account === OWNER_ADDRESS ? withdraw() : sendDonation() }} >{wallet.account === OWNER_ADDRESS ? `Withdraw` : `Submit`}</Button>
+            <Button w="100%" colorScheme="blue" onClick={() => { wallet.account === OWNER_ADDRESS ? withdraw() : sendDonation() }} >{wallet.account === OWNER_ADDRESS ? `Withdraw` : `Send Ξ ${donationValue}`}</Button>
           }
         </VStack>
 
