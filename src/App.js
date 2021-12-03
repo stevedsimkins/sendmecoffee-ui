@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense } from "react"
 import { useWallet } from "use-wallet";
 import { ethers } from "ethers";
 import {
@@ -56,7 +56,7 @@ function App() {
   const checkIfWalletIsConnected = async () => {
     try {
       const { ethereum } = window;
-
+      getAllDonations();
       if (!ethereum) {
         console.log("Make sure you have MetaMask!");
         return;
@@ -69,7 +69,6 @@ function App() {
           const account = accounts[0];
           console.log('Found an authorized account:', account);
           setCurrentAccount(account);
-          getAllDonations();
         } else {
           console.log('No authorized account found');
         }
@@ -121,10 +120,11 @@ function App() {
 
       wallet.connect();
       setCurrentAccount(wallet.account)
-      getAllDonations();
+      checkNetwork();
     } catch (error) {
       console.log(error)
     }
+    getAllDonations();
   }
 
   const getAllDonations = async () => {
@@ -157,9 +157,11 @@ function App() {
   }
   //Use Effect 
   useEffect(() => {
+    if (currentAccount) {
+      getAllDonations();
+    }
     checkIfWalletIsConnected();
-    getAllDonations();
-  }, []);
+  }, [currentAccount]);
 
   //utils 
   const numberInputHandler = (e) => {
@@ -168,6 +170,16 @@ function App() {
 
   const messageInputHandler = (e) => {
     setMessage(e.target.value);
+  }
+
+  const checkNetwork = async () => {
+    try {
+      if (window.ethereum.networkVersion !== '4') {
+        alert("Please connect to Rinkeby!")
+      }
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   const toastPopUp = () =>
@@ -227,6 +239,7 @@ function App() {
     }
   }
 
+
   return (
     <Container maxW="container.lg" >
       <IconButton pos="absolute" top="5%" right="5%" aria-label="toggle color mode" icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />} onClick={toggleColorMode} />
@@ -246,20 +259,22 @@ function App() {
                 If you would like to support {YOUR_NAME} in his <br />
                 creative endeavors feel free to use this dApp <br /> to buy him a coffee with cryto! <br /> </Text>)} </Box> {renderContent()}
         </Box>
-        <Box display="flex" justifyContent="center" alignItems="center" flexDir="column">
-          <Heading> 🚀 {YOUR_NAME}'s Supporters</Heading>
-          <Box mx={10} my={3} overflowY="scroll" maxH="350">
-            {allDonations.map((donation, index) => {
-              return (
-                <Box maxW="420px" p={4} my={3} bg={bg} color={color} rounded="md">
-                  <Text isTruncated >From: {donation.sender}</Text>
-                  <Text>Donated: Ξ {donation.message}</Text>
-                  <Text>Message: {donation.amount}</Text>
-                </Box>
-              )
-            })}
+        <Suspense fallback={<Spinner />}>
+          <Box display="flex" justifyContent="center" alignItems="center" flexDir="column">
+            <Heading> 🚀 {YOUR_NAME}'s Supporters</Heading>
+            <Box mx={10} my={3} overflowY="scroll" maxH="350">
+              {allDonations.map((donation, index) => {
+                return (
+                  <Box maxW="420px" p={4} my={3} bg={bg} color={color} rounded="md">
+                    <Text isTruncated >From: {donation.sender}</Text>
+                    <Text>Donated: Ξ {donation.message}</Text>
+                    <Text>Message: {donation.amount}</Text>
+                  </Box>
+                )
+              })}
+            </Box>
           </Box>
-        </Box>
+        </Suspense>
         <Box pos="absolute" bottom="2%">
           <Text fontSize="sm" py={2}>Created by Steve Simkins</Text>
           <ButtonGroup display="flex" justifyContent="center" alignItems="center" spacing="6">
