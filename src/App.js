@@ -173,6 +173,10 @@ function App() {
     setMessage(e.target.value);
   }
 
+  const shortenAddress = (address) => {
+    return `${address.slice(0, 4)}...${address.slice(address.length - 4, address.length)}`;
+  }
+
   const checkNetwork = async () => {
     try {
       if (window.ethereum.networkVersion !== '4') {
@@ -266,8 +270,8 @@ function App() {
             <Box mx={10} my={3} overflowY="scroll" maxH="350">
               {allDonations.map((donation, index) => {
                 return (
-                  <Box maxW="420px" p={4} my={3} bg={bg} color={color} rounded="md">
-                    <Text isTruncated >From: {donation.sender}</Text>
+                  <Box width={400} p={4} my={3} bg={bg} color={color} rounded="md" >
+                    <Text>From: {shortenAddress(donation.sender)}</Text>
                     <Text>Donated: Ξ {donation.message}</Text>
                     <Text>Message: {donation.amount}</Text>
                   </Box>
@@ -284,7 +288,7 @@ function App() {
           </ButtonGroup>
         </Box>
       </Flex>
-    </Container>
+    </Container >
   );
 }
 
