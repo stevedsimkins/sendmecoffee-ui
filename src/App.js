@@ -262,7 +262,7 @@ function App() {
             ) : (
               <Text fontSize="md">
                 If you would like to support {YOUR_NAME} in his <br />
-                creative endeavors feel free to use this dApp <br /> to buy him a coffee with cryto! <br /> </Text>)} </Box> {renderContent()}
+                creative endeavors feel free to use this dApp <br /> to buy him a coffee with crypto! <br /> </Text>)} </Box> {renderContent()}
         </Box>
         <Suspense fallback={<Spinner />}>
           <Box display="flex" justifyContent="center" alignItems="center" flexDir="column">
