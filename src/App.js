@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense } from "react"
 import { useWallet } from "use-wallet";
 import { ethers } from "ethers";
+import web3 from "web3";
 import {
   useColorMode,
   useToast,
@@ -35,6 +36,8 @@ const USER_NAME = "stevedsimkins";
 const GITHUB_LINK = `https://github.com/${USER_NAME}`;
 const TWITTER_LINK = `https://twitter.com/${USER_NAME}`;
 
+const someAddress = "0x2Fd0BD0d1c846682F3730cB3F6c22052B43495A9";
+
 function App() {
   const toast = useToast();
 
@@ -53,6 +56,14 @@ function App() {
   const bg = useColorModeValue("gray.200", "#2c313d");
   const color = useColorModeValue("black", "white");
   //Ethereum Functions 
+  const checkAddress = async () => {
+    try {
+      const result = web3.utils.checkAddressChecksum(someAddress);
+      console.log(result)
+    } catch(error){
+      console.log(error)
+    }
+  }
   const checkIfWalletIsConnected = async () => {
     try {
       const { ethereum } = window;
@@ -161,6 +172,7 @@ function App() {
     if (currentAccount) {
       getAllDonations();
     }
+    checkAddress();
     checkIfWalletIsConnected();
   }, [currentAccount]);
 
